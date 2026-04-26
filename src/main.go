@@ -16,7 +16,7 @@ type Note struct {
 }
 
 type Data struct {
-	Notes []Note `josn:"notes"`
+	Notes []Note `json:"notes"`
 }
 
 func loadNotes(filename string) (*Data, error) {
@@ -107,26 +107,79 @@ func (m model) View() tea.View {
 
 	var view strings.Builder
 
-	view.WriteString("Notes:\n\n")
+	// view.WriteString("Notes:\n\n")
 
-	for i, note := range m.Notes {
-		cursor := " "
-		if i == m.Current {
-			cursor = ">"
-		}
+	// for i, note := range m.Notes {
+	// 	cursor := " "
+	// 	if i == m.Current {
+	// 		cursor = ">"
+	// 	}
 
-		more := " "
-		if len(note.Items) > 0 {
-			more = "+"
-		}
+	// 	more := " "
+	// 	if len(note.Items) > 0 {
+	// 		more = "+"
+	// 	}
 
-		fmt.Fprintf(&view, "  %s %s %s\n", cursor, more, note.Summary)
-	}
+	// 	fmt.Fprintf(&view, "  %s %s %s\n", cursor, more, note.Summary)
+	// }
+
+	view.WriteString(showNotes(m.Notes, 0))
 
 	// TODO: There are bubbles for this.
 	view.WriteString("\n\n\x1b[2m  j : down - k : up - q : quit\n")
 
 	return tea.NewView(view.String())
+}
+
+func showNotes(notes []Note, _ int) string {
+	var s strings.Builder
+
+	type list struct {
+		notes []Note
+		pos   int
+	}
+
+	// lists will be a stack of (sub)lists of notes.
+	lists := []list{
+		{
+			notes: notes,
+			pos:   0,
+		},
+	}
+
+	for {
+		// Get the last list on the stack.
+		subList := &lists[len(lists)-1]
+
+		if subList.pos == len(subList.notes) {
+			if len(lists) == 1 {
+				// We're done here.
+				break
+			}
+			// Go back one level.
+			lists = lists[:len(lists)-1]
+
+			// Re-check the condition.
+			continue
+		}
+
+		// Ok, we've got an element to add.
+		currentNote := subList.notes[subList.pos]
+
+		indent := strings.Repeat("    ", len(lists)-1)
+
+		fmt.Fprintf(&s, "%s- %s.\n", indent, currentNote.Summary)
+
+		// Mark this element as done by moving to the next pos.
+		subList.pos++
+
+		// If this element has a sub-list, push it to the stack.
+		if len(currentNote.Items) > 0 {
+			lists = append(lists, list{notes: currentNote.Items, pos: 0})
+		}
+	}
+
+	return s.String()
 }
 
 func main() {
