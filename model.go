@@ -70,10 +70,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case 'c':
+			// [c]lose.
 			m.Collapse = true
 
 		case 'o':
+			// [o]pen.
 			m.Collapse = false
+
+		case 't':
+			// [t]oggle.
+			m.Collapse = !m.Collapse
 
 		case 'q', tea.KeyEscape:
 			m.Quit = true
@@ -92,32 +98,47 @@ func (m Model) View() tea.View {
 
 	var view strings.Builder
 
-	// view.WriteString("Notes:\n\n")
+	view.WriteString(" Notes:\n\n")
 
-	// for i, note := range m.Notes {
-	// 	cursor := " "
-	// 	if i == m.Current {
-	// 		cursor = ">"
-	// 	}
-
-	// 	more := " "
-	// 	if len(note.Items) > 0 {
-	// 		more = "+"
-	// 	}
-
-	// 	fmt.Fprintf(&view, "  %s %s %s\n", cursor, more, note.Summary)
-	// }
-
-	view.WriteString(showNotes(m.Notes, 0))
+	view.WriteString(showNotes(m.Notes, m.Current, m.Collapse))
 
 	// TODO: There are bubbles for this.
-	view.WriteString("\n\n\x1b[2m  j : down - k : up - q : quit\n")
+	view.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n")
 
 	return tea.NewView(view.String())
 }
 
 // showNotes 'formats' our notes in the way we want (i.e. show or collapse items).
-func showNotes(notes []Note, _ int) string {
+func showNotes(notes []Note, current int, collapse bool) string {
+	if collapse {
+		return showCollapsed(notes, current)
+	}
+
+	return showExpanded(notes, current)
+}
+
+func showCollapsed(notes []Note, current int) string {
+	var s strings.Builder
+
+	for i, note := range notes {
+		cursor := " "
+		if i == current {
+			cursor = ">"
+		}
+
+		more := " "
+		if len(note.Items) > 0 {
+			more = "+"
+		}
+
+		fmt.Fprintf(&s, " %s %s %s\n", cursor, more, note.Summary)
+	}
+
+	return s.String()
+}
+
+func showExpanded(notes []Note, current int) string {
+
 	var s strings.Builder
 
 	type list struct {
@@ -152,9 +173,24 @@ func showNotes(notes []Note, _ int) string {
 		// Ok, we've got an element to add.
 		currentNote := subList.notes[subList.pos]
 
+		// For now, navigate only in the main list.
+		cursor := " "
+		if len(lists) == 1 {
+			// We're on the main list.
+			if current == subList.pos {
+				cursor = ">"
+			}
+		}
+
+		// Mark elements with sub-lists with a '+'
+		more := " "
+		if len(currentNote.Items) > 0 {
+			more = "+"
+		}
+
 		indent := strings.Repeat("    ", len(lists)-1)
 
-		fmt.Fprintf(&s, "%s- %s.\n", indent, currentNote.Summary)
+		fmt.Fprintf(&s, " %s %s%s %s\n", cursor, indent, more, currentNote.Summary)
 
 		// Mark this element as done by moving to the next pos.
 		subList.pos++
