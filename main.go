@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	app := tea.NewProgram(model{Collapse: true})
+	app := tea.NewProgram(Model{Collapse: true})
 
 	if _, err := app.Run(); err != nil {
 		log.Fatalf("Ooooooooooops! (%v)", err)

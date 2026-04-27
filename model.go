@@ -7,23 +7,32 @@ import (
 	tea "charm.land/bubbletea/v2"
 )
 
-type model struct {
+// Model is the state of our app.
+type Model struct {
+	// Data contains our list of notes.
 	Data
-	Current  int
+	// Current indicates the currently selected note.
+	Current int
+	// Collapse indicates wether to show all the sub-items or just the main list.
 	Collapse bool
-	Quit     bool
+	// Quit means quit (but we'll comment any public symbols anyway haha).
+	Quit bool
 }
 
-type fileLoader struct {
+// FileLoader is the "message" that contains the notes saved to file,
+// or an error if we couldn't load it.
+type FileLoader struct {
 	Data  *Data
 	Error error
 }
 
-func (m model) Init() tea.Cmd {
+// Init will load the notes from file, if any.
+func (m Model) Init() tea.Cmd {
+	// TODO: File path should be set by configuration and/or command line argument.
+	// TODO: If the file doesn't exist (i.e. first launch) we need to create it in the right place.
 	return func() tea.Msg {
-		// TODO: Use configuration or command line arguments for the file path.
-		data, err := loadNotes("data.json")
-		return fileLoader{
+		data, err := LoadNotes("data.json")
+		return FileLoader{
 			Data:  data,
 			Error: err,
 		}
@@ -31,10 +40,11 @@ func (m model) Init() tea.Cmd {
 
 }
 
-func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// Update fulfills tea.Model.
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 
-	case fileLoader:
+	case FileLoader:
 		// TODO: Handle errors properly.
 		if msg.Error != nil {
 			return m, tea.Quit
@@ -73,7 +83,8 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) View() tea.View {
+// View fulfills tea.Model.
+func (m Model) View() tea.View {
 
 	if m.Quit {
 		return tea.NewView("Bye!")
@@ -105,6 +116,7 @@ func (m model) View() tea.View {
 	return tea.NewView(view.String())
 }
 
+// showNotes 'formats' our notes in the way we want (i.e. show or collapse items).
 func showNotes(notes []Note, _ int) string {
 	var s strings.Builder
 
