@@ -1,37 +1,11 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
 )
-
-type Note struct {
-	Summary string `json:"summary"`
-	Items   []Note `json:"items"`
-}
-
-type Data struct {
-	Notes []Note `json:"notes"`
-}
-
-func loadNotes(filename string) (*Data, error) {
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load file %s: %w", filename, err)
-	}
-
-	var data Data
-	if err := json.Unmarshal(content, &data); err != nil {
-		return nil, fmt.Errorf("failed to parse JSON: %w", err)
-	}
-
-	return &data, nil
-}
 
 type model struct {
 	Data
@@ -180,13 +154,4 @@ func showNotes(notes []Note, _ int) string {
 	}
 
 	return s.String()
-}
-
-func main() {
-
-	app := tea.NewProgram(model{Collapse: true})
-
-	if _, err := app.Run(); err != nil {
-		log.Fatalf("Ooooooooooops! (%v)", err)
-	}
 }
