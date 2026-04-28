@@ -45,7 +45,7 @@ func parseArgs() Options {
 	configFile := flag.String("c", DefaultConfigFile, "configuration directory")
 	saveFile := flag.String("f", DefaultSaveFile, "file to read/write our notes")
 	fullScreen := flag.Bool("F", false, "open in full screen mode")
-	// These flags supersedes each other, in the following order: ascii -> unicode -> icons -> emoji.
+	// These flags supersede each other, in the following order: ascii -> unicode -> icons -> emoji.
 	// If neither icons nor emoji are set, unicode glyphs will be used.  ASCII will only be used if
 	// any of the other flags is unset.  By default I'll use Unicode symbols without emoji.
 	// BTW:
@@ -53,7 +53,7 @@ func parseArgs() Options {
 	// long time now...).
 	// - Unicode implies ASCII (or ASCII is contained in Unicode).
 	// - Emojis implies the use of Unicode since it's part of it.
-	// - Iconic is the only "special" one since it requires an iconic font to be installed
+	// - Iconic is the only "special" case since it requires an iconic font to be installed
 	// (it uses Unicode's private area).
 	ascii := flag.Bool("ascii", false, "restrict to ASCII characters")
 	unicode := flag.Bool("unicode", false, "use Unicode")

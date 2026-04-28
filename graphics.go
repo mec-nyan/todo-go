@@ -26,6 +26,8 @@ type Glyphs struct {
 }
 
 func GetGlyphs(mode Glyph) Glyphs {
+	// Set `glyphs` with only ASCII characters (start with the most restrictive set).
+	// Update on the swith according to the selected option `mode`.
 	// TODO: Select appropriate symbols for each set.
 	glyphs := Glyphs{
 		// TODO: Consider removing the extra space at the end.
@@ -38,8 +40,6 @@ func GetGlyphs(mode Glyph) Glyphs {
 	}
 
 	switch mode {
-	case ASCII:
-		return glyphs
 
 	case Unicode:
 		glyphs.Cursor = "🠊 "
@@ -51,6 +51,8 @@ func GetGlyphs(mode Glyph) Glyphs {
 	// Unicode, we can safely skip this for now.
 	case Iconic:
 	case Emoji:
+	case ASCII:
+		// Don't need to change anything.  `glyphs` is already set with ASCII only characters.
 	}
 
 	return glyphs

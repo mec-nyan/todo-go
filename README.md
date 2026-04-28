@@ -15,6 +15,15 @@ A note taking app with a twist. _(This is the Go TUI)_
 - [ ] Collapse/expand per item.
 - [ ] Yank/copy to clipboard.
 - [ ] Emacs/Vim keybindings.
+- [ ] Add emoji suggestion for word (maybe with a trigger like ":" or "\")
+  - [ ] Emoji popup while in that mode?
+  - [ ] Emoji selector dialog...?
+
+> [!TIP]
+> Don't make things more complicated than needed!
+> Keep it simple and you'll have a working app quickly.
+> _(Yes, it's a note for myself lol)_
+
 
 > [!IMPORTANT]
 > Early stage of development!
