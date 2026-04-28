@@ -9,6 +9,8 @@ import (
 
 // Model is the state of our app.
 type Model struct {
+	// Options for our application.
+	Options
 	// Data contains our list of notes.
 	Data
 	// Current indicates the currently selected note.
@@ -31,7 +33,7 @@ func (m Model) Init() tea.Cmd {
 	// TODO: File path should be set by configuration and/or command line argument.
 	// TODO: If the file doesn't exist (i.e. first launch) we need to create it in the right place.
 	return func() tea.Msg {
-		data, err := LoadNotes("data.json")
+		data, err := LoadNotes(m.SaveFile)
 		return FileLoader{
 			Data:  data,
 			Error: err,

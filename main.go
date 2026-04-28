@@ -7,8 +7,9 @@ import (
 )
 
 func main() {
+	opts := parseArgs()
 
-	app := tea.NewProgram(Model{Collapse: true})
+	app := tea.NewProgram(Model{Options: opts, Collapse: true})
 
 	if _, err := app.Run(); err != nil {
 		log.Fatalf("Ooooooooooops! (%v)", err)
