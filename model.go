@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -13,10 +12,6 @@ type Model struct {
 	Options
 	// Data contains our list of notes.
 	Data
-	// Current indicates the currently selected note.
-	Current int
-	// Collapse indicates wether to show all the sub-items or just the main list.
-	Collapse bool
 	// Quit means quit (but we'll comment any public symbols anyway haha).
 	Quit bool
 }
@@ -60,28 +55,37 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Code {
 
 		case 'j':
-			m.Current++
-			if m.Current == len(m.Notes) {
-				m.Current = 0
-			}
+			m.Next()
 
 		case 'k':
-			m.Current--
-			if m.Current < 0 {
-				m.Current = len(m.Notes) - 1
-			}
+			m.Previous()
 
 		case 'c':
-			// [c]lose.
-			m.Collapse = true
+			// [c]lose all.
+			m.Collapse()
 
 		case 'o':
-			// [o]pen.
-			m.Collapse = false
+			// [o]pen all.
+			m.Expand()
 
-		case 't':
-			// [t]oggle.
-			m.Collapse = !m.Collapse
+		case 'e':
+			// [e]xpand this item, one level.
+			// '+' will show items with more levels/items in it.
+			note := m.GetSelected()
+			if note.Show {
+				note.Collapse()
+			} else {
+				note.Expand()
+			}
+
+		case 'r':
+			// [r]ecursively expand this item (all levels)
+			note := m.GetSelected()
+			if note.Show {
+				note.CollapseAll()
+			} else {
+				note.ExpandAll()
+			}
 
 		case 'q', tea.KeyEscape:
 			m.Quit = true
@@ -91,6 +95,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
+// TODO: The view is very primitive now.  We'll improve it later!
 // View fulfills tea.Model.
 func (m Model) View() tea.View {
 
@@ -102,109 +107,15 @@ func (m Model) View() tea.View {
 
 	content.WriteString(" Notes:\n\n")
 
-	content.WriteString(showNotes(m.Notes, m.Current, m.Collapse))
+	content.WriteString(m.ToString())
 
 	// TODO: There are bubbles for this.
+	// TODO: We don't need to show the keybindings in the UI (maybe just a hint for help).
+	// Maybe show a `Usage` message at first launch.  We can add `Help` to the command with `--help`.
 	content.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n")
 
 	view := tea.NewView(content.String())
 	view.AltScreen = true
 
 	return view
-}
-
-// showNotes 'formats' our notes in the way we want (i.e. show or collapse items).
-func showNotes(notes []Note, current int, collapse bool) string {
-	if collapse {
-		return showCollapsed(notes, current)
-	}
-
-	return showExpanded(notes, current)
-}
-
-func showCollapsed(notes []Note, current int) string {
-	var s strings.Builder
-
-	for i, note := range notes {
-		cursor := " "
-		if i == current {
-			cursor = ">"
-		}
-
-		more := " "
-		if len(note.Items) > 0 {
-			more = "+"
-		}
-
-		fmt.Fprintf(&s, " %s %s %s\n", cursor, more, note.Summary)
-	}
-
-	return s.String()
-}
-
-func showExpanded(notes []Note, current int) string {
-
-	var s strings.Builder
-
-	type list struct {
-		notes []Note
-		pos   int
-	}
-
-	// lists will be a stack of (sub)lists of notes.
-	lists := []list{
-		{
-			notes: notes,
-			pos:   0,
-		},
-	}
-
-	for {
-		// Get the last list on the stack.
-		subList := &lists[len(lists)-1]
-
-		if subList.pos == len(subList.notes) {
-			if len(lists) == 1 {
-				// We're done here.
-				break
-			}
-			// Go back one level.
-			lists = lists[:len(lists)-1]
-
-			// Re-check the condition.
-			continue
-		}
-
-		// Ok, we've got an element to add.
-		currentNote := subList.notes[subList.pos]
-
-		// For now, navigate only in the main list.
-		cursor := " "
-		if len(lists) == 1 {
-			// We're on the main list.
-			if current == subList.pos {
-				cursor = ">"
-			}
-		}
-
-		// Mark elements with sub-lists with a '+'
-		more := " "
-		if len(currentNote.Items) > 0 {
-			more = "+"
-		}
-
-		indent := strings.Repeat("    ", len(lists)-1)
-
-		fmt.Fprintf(&s, " %s %s%s %s\n", cursor, indent, more, currentNote.Summary)
-
-		// Mark this element as done by moving to the next pos.
-		subList.pos++
-
-		// If this element has a sub-list, push it to the stack.
-		if len(currentNote.Items) > 0 {
-			lists = append(lists, list{notes: currentNote.Items, pos: 0})
-		}
-	}
-
-	return s.String()
 }

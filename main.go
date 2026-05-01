@@ -9,7 +9,7 @@ import (
 func main() {
 	opts := parseArgs()
 
-	app := tea.NewProgram(Model{Options: opts, Collapse: true})
+	app := tea.NewProgram(Model{Options: opts})
 
 	if _, err := app.Run(); err != nil {
 		log.Fatalf("Ooooooooooops! (%v)", err)
