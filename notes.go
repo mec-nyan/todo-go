@@ -21,16 +21,18 @@ type Note struct {
 	// TODO: Maybe add more fields (i.e. 'title', 'description', 'summary', etc).
 }
 
-// Collapse will hide the list of items.
+// Collapse the note to hide its items.
 // NOTE: Should we return another note instead of modifying it?
 func (n *Note) Collapse() {
 	n.Show = false
 }
 
+// Expand the note to show its items.
 func (n *Note) Expand() {
 	n.Show = true
 }
 
+// CollapseAll hides the note's items recursively.
 func (n *Note) CollapseAll() {
 	n.Collapse()
 	// Again, a dirty recursive solution.  It's acceptable since we won't have that
@@ -42,6 +44,7 @@ func (n *Note) CollapseAll() {
 	}
 }
 
+// ExpandAll shows the note's items recursively.
 func (n *Note) ExpandAll() {
 	n.Expand()
 	// Again, a dirty recursive solution.  It's acceptable since we won't have that
@@ -77,6 +80,7 @@ func LoadNotes(filename string) (*Data, error) {
 	return &data, nil
 }
 
+// Select the next item in the list (with wraparound).
 func (d *Data) Next() {
 	d.Selected++
 	if d.Selected == len(d.Notes) {
@@ -84,6 +88,7 @@ func (d *Data) Next() {
 	}
 }
 
+// Select the previous item in the list (with wraparound).
 func (d *Data) Previous() {
 	if d.Selected > 0 {
 		d.Selected--
@@ -92,6 +97,7 @@ func (d *Data) Previous() {
 	}
 }
 
+// Get a reference to the current item.
 func (d *Data) GetSelected() *Note {
 	return &d.Notes[d.Selected]
 }
@@ -108,10 +114,12 @@ func setCollapsed(notes []Note, collapsed bool) {
 	}
 }
 
+// Collapse every item of the list (recursively).
 func (d *Data) Collapse() {
 	setCollapsed(d.Notes, true)
 }
 
+// Expand every item of the list (recursively).
 func (d *Data) Expand() {
 	setCollapsed(d.Notes, false)
 }
