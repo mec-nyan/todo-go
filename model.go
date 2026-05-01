@@ -5,7 +5,15 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 )
+
+// Terminal has some useful information about our terminal screen.
+// We'll move it to its own file/pkg later.
+type Terminal struct {
+	Width  int
+	Height int
+}
 
 // Model is the state of our app.
 type Model struct {
@@ -17,6 +25,8 @@ type Model struct {
 	Data
 	// Glyphs give us the runes we need according to the selected options.
 	Glyphs
+	// Terminal has useful info about our screen.
+	Terminal
 	// Quit means quit (but we'll comment any public symbols anyway haha).
 	Quit bool
 }
@@ -50,6 +60,10 @@ func (m Model) Init() tea.Cmd {
 // Update fulfills tea.Model.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+
+	case tea.WindowSizeMsg:
+		m.Width = msg.Width
+		m.Height = msg.Height
 
 	case FileLoader:
 		// TODO: Handle errors properly.
@@ -133,10 +147,14 @@ func (m Model) View() tea.View {
 
 	content.WriteString(m.ToString())
 
+	content.WriteString(m.Styled())
+
 	// TODO: There are bubbles for this.
 	// TODO: We don't need to show the keybindings in the UI (maybe just a hint for help).
 	// Maybe show a `Usage` message at first launch.  We can add `Help` to the command with `--help`.
-	content.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n")
+	content.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n\x1b[0m")
+
+	fmt.Fprintf(&content, "\n\x1b[32m%dx%d\n", m.Width, m.Height)
 
 	view := tea.NewView(content.String())
 	view.AltScreen = true
@@ -211,4 +229,53 @@ func (m Model) ToString() string {
 	}
 
 	return s.String()
+}
+
+// Test: using Lipgloss.
+func (m Model) Styled() string {
+	leftPane := lipgloss.NewStyle().
+		Padding(1).
+		Width(m.Width / 2)
+
+	rightPane := lipgloss.NewStyle().
+		Padding(0, 2).
+		Width(m.Width - (m.Width / 2)).
+		Foreground(lipgloss.Yellow).
+		Border(lipgloss.RoundedBorder())
+
+	highlight := lipgloss.NewStyle().
+		Foreground(lipgloss.Blue).
+		Reverse(true)
+
+	var leftContent strings.Builder
+	var rightContent strings.Builder
+
+	for i, note := range m.Notes {
+		more := "  "
+		if len(note.Items) > 0 {
+			more = m.More
+		}
+
+		line := fmt.Sprintf("%s %s", more, note.Summary)
+
+		if i == m.Selected {
+			line = highlight.Render(line)
+			if len(note.Items) > 0 {
+				for _, item := range note.Items {
+					fmt.Fprintf(&rightContent, "- %s\n", item.Summary)
+				}
+			}
+		}
+
+		leftContent.WriteString(line + "\n")
+	}
+
+	if rightContent.Len() == 0 {
+		rightContent.WriteString("empty")
+	}
+
+	left := leftPane.Render(leftContent.String())
+	right := rightPane.Render(strings.TrimSpace(rightContent.String()))
+
+	return lipgloss.JoinHorizontal(lipgloss.Top, left, right)
 }
