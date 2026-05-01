@@ -38,8 +38,8 @@ func (n *Note) CollapseAll() {
 	// many levels of recursion.
 	// NOTE: There's no need to check the length of n.Items.
 	// If it is empty, this loop will be skipped.
-	for _, item := range n.Items {
-		item.CollapseAll()
+	for i := range n.Items {
+		n.Items[i].CollapseAll()
 	}
 }
 
@@ -49,8 +49,8 @@ func (n *Note) ExpandAll() {
 	// many levels of recursion.
 	// NOTE: There's no need to check the length of n.Items.
 	// If it is empty, this loop will be skipped.
-	for _, item := range n.Items {
-		item.Expand()
+	for i := range n.Items {
+		n.Items[i].ExpandAll()
 	}
 }
 
