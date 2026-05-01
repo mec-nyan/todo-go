@@ -97,6 +97,20 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				note.ExpandAll()
 			}
 
+		case 'm':
+			// indent [m]ore (increase tab size).
+			// max: 8 columns.
+			if m.TabSize < 8 {
+				m.TabSize++
+			}
+
+		case 'l':
+			// indent [l]ess (decrease tab size).
+			// min: 1 column.
+			if m.TabSize > 1 {
+				m.TabSize--
+			}
+
 		case 'q', tea.KeyEscape:
 			m.Quit = true
 			return m, tea.Quit
@@ -182,7 +196,8 @@ func (m Model) ToString() string {
 			more = m.More
 		}
 
-		indent := strings.Repeat("    ", len(lists)-1)
+		tab := strings.Repeat(" ", m.TabSize)
+		indent := strings.Repeat(tab, len(lists)-1)
 
 		fmt.Fprintf(&s, " %s %s%s %s\n", cursor, indent, more, currentNote.Summary)
 

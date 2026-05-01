@@ -32,6 +32,8 @@ type Options struct {
 	// - Iconic (requires an iconic font installed).
 	// - Emoji (wether to use emojis or not. Implies Unicode).
 	Graphics Glyph
+	// TabSize sets the size in spaces of each indent level.
+	TabSize int
 }
 
 func LoadConfig() Options {
@@ -45,6 +47,7 @@ func parseArgs() Options {
 	configFile := flag.String("c", DefaultConfigFile, "configuration directory")
 	saveFile := flag.String("f", DefaultSaveFile, "file to read/write our notes")
 	fullScreen := flag.Bool("F", false, "open in full screen mode")
+	tabSize := flag.Int("t", 4, "set the size of the indent")
 	// These flags supersede each other, in the following order: ascii -> unicode -> icons -> emoji.
 	// If neither icons nor emoji are set, unicode glyphs will be used.  ASCII will only be used if
 	// any of the other flags is unset.  By default I'll use Unicode symbols without emoji.
@@ -87,5 +90,6 @@ func parseArgs() Options {
 		SaveFile:   *saveFile,
 		FullScreen: *fullScreen,
 		Graphics:   graphics,
+		TabSize:    *tabSize,
 	}
 }
