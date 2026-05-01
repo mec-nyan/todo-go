@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 )
 
 // Note represent a single Note.  It can have a 'Summary' (the Note itself) and optionally,
@@ -115,72 +114,4 @@ func (d *Data) Collapse() {
 
 func (d *Data) Expand() {
 	setCollapsed(d.Notes, false)
-}
-
-func (d *Data) ToString() string {
-
-	var s strings.Builder
-
-	type list struct {
-		notes []Note
-		pos   int
-	}
-
-	// lists will be a stack of (sub)lists of notes.
-	lists := []list{
-		{
-			notes: d.Notes,
-			pos:   0,
-		},
-	}
-
-	for {
-		// Get the last list on the stack.
-		subList := &lists[len(lists)-1]
-
-		if subList.pos == len(subList.notes) {
-			if len(lists) == 1 {
-				// We're done here.
-				break
-			}
-			// Go back one level.
-			lists = lists[:len(lists)-1]
-
-			// Re-check the condition.
-			continue
-		}
-
-		// Ok, we've got an element to add.
-		currentNote := subList.notes[subList.pos]
-
-		// For now, navigate only in the main list.
-		// TODO: We also need to navegate the sub-lists.
-		cursor := "  "
-		if len(lists) == 1 {
-			// We're on the main list.
-			if d.Selected == subList.pos {
-				cursor = ">>"
-			}
-		}
-
-		// Mark elements with sub-lists with a '+'
-		more := "  "
-		if len(currentNote.Items) > 0 {
-			more = "++"
-		}
-
-		indent := strings.Repeat("    ", len(lists)-1)
-
-		fmt.Fprintf(&s, " %s %s%s %s\n", cursor, indent, more, currentNote.Summary)
-
-		// Mark this element as done by moving to the next pos.
-		subList.pos++
-
-		// If this element has a sub-list, and it's not collapsed, push it to the stack.
-		if len(currentNote.Items) > 0 && currentNote.Show {
-			lists = append(lists, list{notes: currentNote.Items, pos: 0})
-		}
-	}
-
-	return s.String()
 }

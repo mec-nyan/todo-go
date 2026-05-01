@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
@@ -9,11 +10,20 @@ import (
 // Model is the state of our app.
 type Model struct {
 	// Options for our application.
+	// TODO: We need to remove this options from the model, and set the appropriate
+	// values in the `initialModel` function.
 	Options
 	// Data contains our list of notes.
 	Data
+	// Glyphs give us the runes we need according to the selected options.
+	Glyphs
 	// Quit means quit (but we'll comment any public symbols anyway haha).
 	Quit bool
+}
+
+func initialModel(opts Options) Model {
+	glyphs := GetGlyphs(opts.Graphics)
+	return Model{Glyphs: glyphs, Options: opts}
 }
 
 // FileLoader is the "message" that contains the notes saved to file,
@@ -118,4 +128,72 @@ func (m Model) View() tea.View {
 	view.AltScreen = true
 
 	return view
+}
+
+func (m Model) ToString() string {
+
+	var s strings.Builder
+
+	type list struct {
+		notes []Note
+		pos   int
+	}
+
+	// lists will be a stack of (sub)lists of notes.
+	lists := []list{
+		{
+			notes: m.Notes,
+			pos:   0,
+		},
+	}
+
+	for {
+		// Get the last list on the stack.
+		subList := &lists[len(lists)-1]
+
+		if subList.pos == len(subList.notes) {
+			if len(lists) == 1 {
+				// We're done here.
+				break
+			}
+			// Go back one level.
+			lists = lists[:len(lists)-1]
+
+			// Re-check the condition.
+			continue
+		}
+
+		// Ok, we've got an element to add.
+		currentNote := subList.notes[subList.pos]
+
+		// For now, navigate only in the main list.
+		// TODO: We also need to navegate the sub-lists.
+		cursor := "  "
+		if len(lists) == 1 {
+			// We're on the main list.
+			if m.Selected == subList.pos {
+				cursor = m.Cursor
+			}
+		}
+
+		// Mark elements with sub-lists with a '+'
+		more := "  "
+		if len(currentNote.Items) > 0 {
+			more = m.More
+		}
+
+		indent := strings.Repeat("    ", len(lists)-1)
+
+		fmt.Fprintf(&s, " %s %s%s %s\n", cursor, indent, more, currentNote.Summary)
+
+		// Mark this element as done by moving to the next pos.
+		subList.pos++
+
+		// If this element has a sub-list, and it's not collapsed, push it to the stack.
+		if len(currentNote.Items) > 0 && currentNote.Show {
+			lists = append(lists, list{notes: currentNote.Items, pos: 0})
+		}
+	}
+
+	return s.String()
 }
