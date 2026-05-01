@@ -98,16 +98,19 @@ func (m Model) View() tea.View {
 		return tea.NewView("Bye!")
 	}
 
-	var view strings.Builder
+	var content strings.Builder
 
-	view.WriteString(" Notes:\n\n")
+	content.WriteString(" Notes:\n\n")
 
-	view.WriteString(showNotes(m.Notes, m.Current, m.Collapse))
+	content.WriteString(showNotes(m.Notes, m.Current, m.Collapse))
 
 	// TODO: There are bubbles for this.
-	view.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n")
+	content.WriteString("\n\n\x1b[2m j : down\n k : up\n t : toggle collapsed\n o : open all\n c : close all\n q : quit\n")
 
-	return tea.NewView(view.String())
+	view := tea.NewView(content.String())
+	view.AltScreen = true
+
+	return view
 }
 
 // showNotes 'formats' our notes in the way we want (i.e. show or collapse items).
